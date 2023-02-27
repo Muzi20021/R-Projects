@@ -1,6 +1,6 @@
 ---
 title: "Gdzie ludzie sprawdzają prognozę pogody? - Analiza"
-author: "M. Muzykant M. Furmanik" 
+author: "M. Muzykant M." 
 date: "Czerwiec 2021"
 output: 
   html_document:
