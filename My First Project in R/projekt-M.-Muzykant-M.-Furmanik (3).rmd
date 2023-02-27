@@ -1,0 +1,249 @@
+---
+title: "Gdzie ludzie sprawdzają prognozę pogody? - Analiza"
+author: "M. Muzykant M. Furmanik" 
+date: "Czerwiec 2021"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+
+# podstawowe pakiety wykorzystywane w analizie
+library(fivethirtyeight)
+library(dplyr)
+library(ggplot2)
+
+names(weather_check)[c(7)] <- c("sex")
+weather_check$sex <- factor(weather_check$sex, levels = c("TRUE", "FALSE"),
+                      labels = c("Female", "Male"))
+
+
+```
+*Niniejsza analiza stanowi projekt z przedmiotu PjR na kierunku Analityka Biznesowa (2020/2021)*
+
+# Wprowadzenie 
+
+Celem projektu jest przedstawienie danych na temat sposobu sprawdzania prognozy pogody przez ludzi z takich rejonów jak Pacyfik, południowy oraz środkowy Atlantyk czy Nowa Anglia. Dane na ten temat zostały zebrane przez Verizon FiOS oraz  SurveyMonkey Audience i przedstawione w [tym artykule](https://fivethirtyeight.com/features/weather-forecast-news-app-habits/)
+
+## Obróbka danych 
+
+Dane wczytano bezpośrednio z biblioteki fivethirtyeight.
+
+```{r}
+library(fivethirtyeight)
+View(weather_check)
+```
+
+Składają się z  `r nrow(weather_check)` rekordów i `r ncol(weather_check)` zmiennych . Każdy rekord dotyczy pojedynczej osoby badanej.
+
+## Wykorzystane zmienne
+
+W dalszej części analizy wykorzystano następujące zmienne:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *weather_source*    | źródło prognozy pogody
+| *age*               | wiek
+| *region*            | region zamieszkania
+| *sex*               | płcie
+| *hhold_income*      | przychód (w tyś.USD)
+| *ck_weather_watch*  | opinie na temat sprawdzania pogody na smartwatch'u
+
+### Statystyki podsumowujące wybrane zmienne przedstawiają się następująco:
+
+#### Przedział wiekowy badanych:
+```{r}
+knitr::kable(sort(table(weather_check$age), decreasing = TRUE),
+             col.names=c("Wiek", "Liczba"))
+```
+
+#### Płeć badanych:
+```{r}
+knitr::kable(sort(table(weather_check$sex), decreasing = TRUE),
+             col.names=c("Płeć", "Liczba"))
+```
+
+#### Region, z którego pochodzą badani:
+```{r}
+knitr::kable(sort(table(weather_check$region), decreasing = TRUE),
+             col.names=c("Region", "Liczba"))
+```
+
+
+Z powyższych tabeli można odczytać m.in, że największa liczba osób badanych pochodziła z Pacyfiku oraz południowego Atlantyku. Badane osoby były w wiekszośći płci żeńskiej. Największa liczba osób badanych była w wieku 45 - 59.
+
+# Analiza
+
+Przeprowadzona analiza obejmuje następujące zagadnienia:
+
+* analizę przedziału zarobków uczestników badania względem wieku
+* analizę opinii na temat sprawdzania prognozy pogody na smartwatch'u
+* analizę ilości osób badanych, które korzystają z danego źródła prognozy pogody
+* analizę opinii na temat sprawdzania prognozy pogody na smartwatch'u względem wieku 
+* analizę ilości osób badanych, które korzystają z danego źródła prognozy pogody z uwzględnieniem wieku
+* analizę opinii na temat używania smartwatch'a jako źródło sprawdzania pogody względem regionu zamieszkania
+
+
+## Analiza nr. 1 
+
+Celem tej analizy jest przedstawienie zarobków osób badanych wzgledem ich wieku.
+Do tej analizy zostały wykorzystane zmienne:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *age*               | wiek
+| *hhold_income*      | przychód (w tyś.USD)
+
+### Przedział zarobków osób badanych względem wieku
+
+```{r}
+boxplot(weather_check$hhold_income ~ weather_check$age,
+        main = "Przedział zarobków uczestników badania",
+        xlab = "Wiek", ylab = "Przychód w tyś.USD",col="lightgreen"
+)
+```
+
+
+
+## Analiza nr. 2 
+
+Analiza ta ma za zadanie przedstawić opinie na temat sprawdzania prognozy pogody na smartwatch'u, w momencie, w którym posiadałoby się takie urządzenie.
+Do tej analizy została wykorzystana zmienna:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *ck_weather_watch*  | opinie na temat sprawdzania pogody na smartwatch'u
+
+### Opinie na temat sprawdzania pogody na smartwatch'u 
+
+```{r}
+ggplot(weather_check, aes(x =ck_weather_watch)) +
+  geom_bar(fill="brown") + ggtitle("Rozkład ocen") +
+  xlab("opinie") + ylab("liczba")+ theme(plot.title = element_text(hjust = 0.5))+scale_x_discrete(na.translate = FALSE)
+
+
+```
+
+## Analiza nr. 3 
+
+Analiza ta ma za zadanie przedstawić ilość osób badanych, które sprawdzają prognozę pogody z danego źródła.
+Do tej analizy została wykorzystana zmienna:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *ck_weather_source*  |  źródło prognozy pogody
+
+
+### Źródła pozyskiwania informacji o pogodzie
+
+```{r}
+ggplot(weather_check, aes(y = weather_source, )) + 
+  geom_bar(fill="brown")+ggtitle("Źródła pogody")+
+   xlab("liczba") + ylab("źródła")+
+ theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_discrete(na.translate = FALSE)
+
+
+```
+
+## Analiza nr. 4
+
+Celem tej analizy jest przedstawienie opinii na temat używania smartwatch'a do sprawdzania prognozy pogody względem wieku badanych. 
+Do tej analizy zostały wykorzystane zmienne:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *ck_weather_watch*  | opinie na temat sprawdzania pogody na smartwatch'u
+| *age*               | wiek
+
+### Opinie na temat używania smartwatch'a do sprawdzania prognozy pogody względem wieku
+
+```{r}
+ggplot(weather_check, aes(x = age,fill = ck_weather_watch ))+theme_bw() +
+  stat_count(width = 0.5) +
+  labs(y="liczba",x="wiek", title="rozkład wieku") +
+  scale_fill_discrete(name="oceny")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_x_discrete(na.translate = FALSE)
+
+```
+
+## Analiza nr. 5
+
+Analiza ta ma za zadania pokazanie używanych źródeł do sprawdzania prognozy pogody z uwzględnieniem wieku. 
+Do tej analizy zostały użyte zmienne:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *ck_weather_source* | źródło prognozy pogody
+| *age*               | wiek
+
+### Źródło sprawdzania prognozy pogody względem wieku
+
+```{r}
+ggplot(weather_check, aes(x = age,fill = weather_source ))+theme_bw() +
+  stat_count(width = 0.5) +
+  labs(y="liczba",x="wiek", title="rozkład wieku") +
+  scale_fill_discrete(name="źródła")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_x_discrete(na.translate = FALSE) 
+
+```
+
+## Analiza nr. 6
+
+Zadaniem tej analizy jest przedstawienie opinii na temat używania smartwatch'a jako źródło sprawdzania prognozy pogody względem regionu zamieszkania.
+Do tej analizy zostały wykorzystane zmienne:
+
+| Zmienna             | Opis          
+| --------------------|:-------------------------------------------
+| *ck_weather_watch*  | opinie na temat sprawdzania pogody na smartwatch'u
+| *region*            | region zamieszkania
+
+### Opinie na temat sprawdzania prognozy pogody na smartwatch'u z uwzględnieniem regionu zamieszkania
+
+```{r}
+ggplot(weather_check, aes(y = ck_weather_watch,fill = region ))+theme_bw() +
+  stat_count(width = 0.5) +
+  labs(y="oceny",x="liczba", title="oceny według regionu") +
+  scale_fill_discrete(name="region")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_discrete(na.translate = FALSE)
+```
+
+
+
+# Wnioski
+
+1. Największe zarobki posiadają osoby w starszym wieku, czyli 45 - 59 i 60+.
+2. Młodzi dorośli(18 - 29) mają największy przedział zarobków, lecz także ich średnia zarobków jest najmniejsza ze wszystkich grup. Dolna granica przedziału jest najniższa względem innych grup wiekowych.
+3. Największa liczba osób stwierdziła, że gdyby była w posiadaniu smartwatch'a, bardzo możliwe, że korzystałaby ze sprawdzania prognozy pogody na tym urządzeniu, a prawie 300 osób zaświadczyło, że raczej korzystałaby ze smartwatch'a by sprawdzać pogodę. Oznacza to, że duża liczba osób mogłaby korzystać z prognozy, gdyby były w posiadaniu takiego urządzenia.
+4. Ponad 200 osób stwierdziło, że byłoby bardzo wątpliwe korzystanie przez nich z prognozy pogody na smartwatch'u. Najmniejsza liczba osób zaznaczyła w badaniu opcję "Somewhat likely", czyli raczej nie byłoby prawdopodobne korzystanie przez nich z takiej opcji sprawdzania pogody.
+5. Najwięcej osób preferuje sprawdzać pogodę w aplikacji swojej lub domyślnej na telefonie lub w telewizji, a najmniej w biuletynie,gazetach
+lub radiu.Ludzie preferują sprawdzanie pogody przez telefon, choć dalej popularnym źródłem wiedzy w tym zakresie jest lokalna telewizja.
+6. W grupie wiekowej 45-59 największa liczba osób badanych stwierdziła, że najprawdopodobniej korzystałaby ze smartwatch'a jako źródło sprawdzania pogody. Natomiast w grupie 60+ największa liczba uczestników badania nie korzystałaby z tego urządzenia w celu sprawdzania prognozy pogody.W grupach wiekowych 18-29 i 30-44 wyniki były zbliżone do siebie.
+7. W każdej grupie wiekowej najmiejsza liczba osób badanych zaznaczyła odpowiedź gazety oraz radio jako źródło sprawdzania prognozy pogody . Natomiast w każdej grupie wiekowej największa liczba osób badanych stwierdziło, że korzysta z domyślnej aplikacji pogodowej na swoim telefonie. W grupach 45-59 oraz 60+ duża liczba osób wybrała odpowiedź lokalna telewizja jako źródło sprawdzania pogody, w grupach 18-29 i 30-44 była to mniejszość. 
+8. Największa liczba osób najprawdopodobniej korzytsałaby ze smartwatch'a w celu sprwdzania pogody pochodzą z regionu East North Central. Największa liczba osób, które zaznaczyły odpowiedź "Very unlikely", czyli bardzo nieprawdopodobne, zamieszkują region Pacyfik. Najmniejsza ilość osób badanych z każdego regionu stwierdziła, że raczej nie korzystałaby w celu sprawdzania prognozy pogody ze smartwatch'a. 
+
+
+# Co dalej?
+
+Kolejne analizy mogłyby uwzględnić:
+
+* badanie z jakich źródeł sprawdzania prognozy pogody korzystają osoby w danym wieku
+* sprawdzenie z jakich źródeł najczęściej korzystają kobiety i z jakich męźczyzni 
+* analizę w jakim regionie najczęściej korzysta się z jakiego źródła sprawdzania prognozy pogody
+
+
+## Źródła danych i wykorzystane pomoce:
+
+* https://fivethirtyeight.com/features/weather-forecast-news-app-habits/
+* https://github.com/fivethirtyeight/data/tree/master/weather-check
+* https://pl.wikipedia.org/wiki/Markdown 
